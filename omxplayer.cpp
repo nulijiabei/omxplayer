@@ -114,6 +114,7 @@ bool              m_has_audio           = false;
 bool              m_has_subtitle        = false;
 bool              m_gen_log             = false;
 bool              m_loop                = false;
+bool              m_noloop              = false;
 
 enum{ERROR=-1,SUCCESS,ONEBYTE};
 
@@ -556,6 +557,7 @@ int main(int argc, char *argv[])
   const int layout_opt      = 0x206;
   const int dbus_name_opt   = 0x209;
   const int loop_opt        = 0x20a;
+  const int noloop_opt      = 0x99a;
   const int layer_opt       = 0x20b;
   const int no_keys_opt     = 0x20c;
   const int anaglyph_opt    = 0x20d;
@@ -624,6 +626,7 @@ int main(int argc, char *argv[])
     { "layout",       required_argument,  NULL,          layout_opt },
     { "dbus_name",    required_argument,  NULL,          dbus_name_opt },
     { "loop",         no_argument,        NULL,          loop_opt },
+    { "noloop",       no_argument,        NULL,          noloop_opt },
     { "layer",        required_argument,  NULL,          layer_opt },
     { "alpha",        required_argument,  NULL,          alpha_opt },
     { "display",      required_argument,  NULL,          display_opt },
@@ -877,6 +880,9 @@ int main(int argc, char *argv[])
         if(m_incr != 0)
             m_loop_from = m_incr;
         m_loop = true;
+        break;
+      case noloop_opt:
+        m_noloop = true;
         break;
       case 'b':
         m_blank_background = optarg ? strtoul(optarg, NULL, 0) : 0xff000000;
@@ -1180,6 +1186,8 @@ int main(int argc, char *argv[])
   m_av_clock->OMXReset(m_has_video, m_has_audio);
   m_av_clock->OMXStateExecute();
   sentStarted = true;
+
+  printf("play start ...\n");
 
   while(!m_stop)
   {
@@ -1550,6 +1558,11 @@ int main(int argc, char *argv[])
     {
       double seek_pos     = 0;
       double pts          = 0;
+
+      if(m_noloop) {
+        printf("noloop ...\n");
+        sleep(86400);
+      }
 
       if(m_has_subtitle)
         m_player_subtitles.Pause();
