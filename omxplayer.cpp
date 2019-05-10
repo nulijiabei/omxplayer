@@ -26,6 +26,7 @@
 #include <sys/ioctl.h>
 #include <getopt.h>
 #include <string.h>
+#include <thread>
 
 #define AV_NOWARN_DEPRECATED
 
@@ -495,6 +496,19 @@ static void blank_background(uint32_t rgba)
   assert( ret == 0 );
 }
 
+void kpid(int _pid, bool &_start) {
+  for(;;) {
+    if (_start) {
+      sleep(3);
+      if(_pid != 0) {
+        printf("play start kpid %d ...\n", _pid);
+        kill(_pid, SIGKILL);
+      }
+      return;
+    }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   signal(SIGSEGV, sig_handler);
@@ -945,6 +959,8 @@ int main(int argc, char *argv[])
     return 0;
   }
 
+  std::thread t1(kpid, m_kpid, std::ref(sentStarted));
+
   m_filename = argv[optind];
 
   auto PrintFileNotFound = [](const std::string& path)
@@ -1192,10 +1208,6 @@ int main(int argc, char *argv[])
   m_av_clock->OMXReset(m_has_video, m_has_audio);
   m_av_clock->OMXStateExecute();
   sentStarted = true;
-
-  printf("play start kpid %d ...\n", m_kpid);
-  if(m_kpid != 0)
-    kill(m_kpid, SIGKILL);
 
   while(!m_stop)
   {
