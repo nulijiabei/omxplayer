@@ -246,7 +246,6 @@ clean:
 
 .PHONY : checkout
 checkout:
-	git clone git://source.ffmpeg.org/ffmpeg ffmpeg -b release/3.3 --depth=1
 
 .PHONY : install
 install:

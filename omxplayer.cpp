@@ -116,7 +116,6 @@ bool              m_has_subtitle        = false;
 bool              m_gen_log             = false;
 bool              m_loop                = false;
 bool              m_noloop              = false;
-int               m_kpid                = 0;
 
 enum{ERROR=-1,SUCCESS,ONEBYTE};
 
@@ -496,21 +495,11 @@ static void blank_background(uint32_t rgba)
   assert( ret == 0 );
 }
 
-void kpid(int _pid, bool &_start) {
-  for(;;) {
-    if (_start) {
-      sleep(3);
-      if(_pid != 0) {
-        printf("play start kpid %d ...\n", _pid);
-        kill(_pid, SIGKILL);
-      }
-      return;
-    }
-  }
-}
-
 int main(int argc, char *argv[])
 {
+
+  setvbuf(stdout, (char *)NULL, _IONBF, 0);
+
   signal(SIGSEGV, sig_handler);
   signal(SIGABRT, sig_handler);
   signal(SIGFPE, sig_handler);
@@ -574,7 +563,6 @@ int main(int argc, char *argv[])
   const int loop_opt        = 0x20a;
   const int noloop_opt      = 0x99a;
   const int layer_opt       = 0x20b;
-  const int kpid_opt        = 0x99b;
   const int no_keys_opt     = 0x20c;
   const int anaglyph_opt    = 0x20d;
   const int native_deinterlace_opt = 0x20e;
@@ -644,7 +632,6 @@ int main(int argc, char *argv[])
     { "loop",         no_argument,        NULL,          loop_opt },
     { "noloop",       no_argument,        NULL,          noloop_opt },
     { "layer",        required_argument,  NULL,          layer_opt },
-    { "kpid",         required_argument,  NULL,          kpid_opt },
     { "alpha",        required_argument,  NULL,          alpha_opt },
     { "display",      required_argument,  NULL,          display_opt },
     { "cookie",       required_argument,  NULL,          http_cookie_opt },
@@ -910,9 +897,6 @@ int main(int argc, char *argv[])
       case layer_opt:
         m_config_video.layer = atoi(optarg);
         break;
-      case kpid_opt:
-        m_kpid = atoi(optarg); 
-        break;
       case alpha_opt:
         m_config_video.alpha = atoi(optarg);
         break;
@@ -958,8 +942,6 @@ int main(int argc, char *argv[])
     print_usage();
     return 0;
   }
-
-  std::thread t1(kpid, m_kpid, std::ref(sentStarted));
 
   m_filename = argv[optind];
 
